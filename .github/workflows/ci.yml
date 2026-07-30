@@ -1,0 +1,237 @@
+name: CI
+
+# Audit finding #3: this was the only CI/CD-shaped file in the whole repo
+# missing until now — nothing ran tests or checked a build before a deploy.
+# This pipeline covers: lint, typecheck, and test for both backend and
+# frontend on every push/PR, plus a best-effort end-to-end job.
+#
+# NOTE on the e2e job specifically: it was written and wired up carefully,
+# but could not be executed even once from the sandbox this was authored in
+# (no network/service access there — see repo docs on that limitation).
+# Treat it as a strong starting point, not a verified-green pipeline — run
+# it for real (e.g. by opening a throwaway PR) and expect to iron out at
+# least minor issues (timing, env vars, path assumptions) before trusting it
+# as a merge gate.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  BUN_VERSION: '1.2'
+
+jobs:
+  backend:
+    name: Backend — lint, typecheck, test
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: pepnetcom_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U test -d pepnetcom_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+      redis:
+        image: valkey/valkey:8-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "valkey-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Copy test environment
+        run: cp .env.test .env
+
+      - name: Lint
+        run: bun run lint
+
+      - name: Typecheck
+        run: bun run typecheck
+
+      - name: Generate Prisma client
+        run: bun run db:generate
+
+      - name: Run migrations against the test database
+        run: bun x prisma migrate deploy
+        env:
+          DATABASE_URL: postgresql://test:test@localhost:5432/pepnetcom_test
+
+      - name: Run tests
+        run: bun run test:coverage
+        env:
+          DATABASE_URL: postgresql://test:test@localhost:5432/pepnetcom_test
+          REDIS_URL: redis://localhost:6379/1
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-coverage
+          path: backend/coverage
+          retention-days: 14
+
+  frontend:
+    name: Frontend — lint, typecheck, build, test
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+
+      - name: Install dependencies
+        # No committed lockfile for the frontend yet (see audit notes) — this
+        # will create one on first run. Once bun.lock exists here too, switch
+        # this to `bun install --frozen-lockfile` to match the backend job
+        # and actually enforce reproducible installs.
+        run: bun install
+
+      - name: Copy example environment
+        run: cp .env.example .env.local
+
+      - name: Lint
+        run: bun run lint
+
+      - name: Typecheck
+        run: bun x tsc --noEmit
+
+      - name: Unit tests
+        run: bun run test -- --run
+
+      - name: Build
+        run: bun run build
+        env:
+          NEXT_PUBLIC_API_URL: http://localhost:3000
+          NEXT_PUBLIC_SITE_URL: http://localhost:3001
+          NEXTAUTH_URL: http://localhost:3001
+          NEXTAUTH_SECRET: ci-placeholder-secret-not-for-production
+          AUTH_SECRET: ci-placeholder-secret-not-for-production
+
+  e2e:
+    name: End-to-end (Playwright) — best-effort, see workflow header
+    needs: [backend, frontend]
+    runs-on: ubuntu-latest
+    # Never blocks the pipeline on its own — see the header comment on why
+    # this job hasn't been run for real yet. Remove this once it's been
+    # verified green at least once.
+    continue-on-error: true
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: pepnetcom_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U test -d pepnetcom_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+      redis:
+        image: valkey/valkey:8-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "valkey-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+
+      - name: Install backend dependencies
+        working-directory: backend
+        run: bun install --frozen-lockfile
+
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: bun install
+
+      - name: Prepare backend env and database
+        working-directory: backend
+        run: |
+          cp .env.test .env
+          bun run db:generate
+          bun x prisma migrate deploy
+        env:
+          DATABASE_URL: postgresql://test:test@localhost:5432/pepnetcom_test
+
+      - name: Start backend server
+        working-directory: backend
+        run: bun run start &
+        env:
+          DATABASE_URL: postgresql://test:test@localhost:5432/pepnetcom_test
+          REDIS_URL: redis://localhost:6379/1
+          FRONTEND_URL: http://localhost:3001
+
+      - name: Wait for backend to be ready
+        run: npx wait-on http://localhost:3000/api/health -t 60000
+
+      - name: Prepare frontend env
+        working-directory: frontend
+        run: |
+          cp .env.example .env.local
+          echo "NEXT_PUBLIC_API_URL=http://localhost:3000" >> .env.local
+
+      - name: Install Playwright browsers
+        working-directory: frontend
+        run: bun x playwright install --with-deps chromium
+
+      - name: Run Playwright e2e tests
+        working-directory: frontend
+        run: bun run test:e2e
+        env:
+          PLAYWRIGHT_BASE_URL: http://localhost:3001
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: frontend/playwright-report
+          retention-days: 14

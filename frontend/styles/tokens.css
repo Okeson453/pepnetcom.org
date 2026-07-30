@@ -1,0 +1,16 @@
+@layer base {
+  :root {
+    --ink: #101728;
+    --ink-2: #161f36;
+    --bone: #ECE8DD;
+    --bone-2: #e2ded1;
+    --amber: #E7A63C;
+    --amber-bright: #F0B85C;
+    --teal: #2E9A8C;
+    --rust: #B14B2C;
+    --graphite: #1C2230;
+    --line: rgba(28, 34, 48, 0.12);
+    --line-dark: rgba(236, 232, 221, 0.12);
+    --radius: 6px;
+  }
+}

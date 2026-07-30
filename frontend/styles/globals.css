@@ -1,0 +1,63 @@
+@import "tailwindcss";
+@import "./tokens.css";
+
+/*
+ * Tailwind v4 only generates color/radius/font utilities (bg-ink, text-bone,
+ * rounded, font-display, etc.) from `@theme` — it does NOT read a v3-style
+ * `theme.extend` object out of tailwind.config.ts unless that file is linked
+ * with an explicit `@config` directive. Rather than add that indirection (and
+ * keep two copies of the same values in sync), the brand palette is defined
+ * once here, re-pointed at the CSS custom properties already declared in
+ * ./tokens.css so there is a single source of truth.
+ */
+@theme {
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-bone: var(--bone);
+  --color-bone-2: var(--bone-2);
+  --color-amber: var(--amber);
+  --color-amber-bright: var(--amber-bright);
+  --color-teal: var(--teal);
+  --color-rust: var(--rust);
+  --color-graphite: var(--graphite);
+
+  --radius-DEFAULT: var(--radius);
+
+  --font-display: var(--font-space-grotesk), sans-serif;
+  --font-body: var(--font-ibm-plex-sans), sans-serif;
+  --font-mono: var(--font-ibm-plex-mono), monospace;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    background-color: var(--bone);
+    color: var(--graphite);
+    font-family: var(--font-ibm-plex-sans), system-ui, sans-serif;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-space-grotesk), sans-serif;
+    letter-spacing: -0.01em;
+  }
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+}
+
+@layer utilities {
+  .font-display {
+    font-family: var(--font-space-grotesk), sans-serif;
+  }
+  .font-body {
+    font-family: var(--font-ibm-plex-sans), sans-serif;
+  }
+  .font-mono {
+    font-family: var(--font-ibm-plex-mono), monospace;
+  }
+}

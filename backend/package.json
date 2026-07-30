@@ -1,0 +1,55 @@
+{
+  "name": "pepnetcom-backend",
+  "version": "1.0.0",
+  "description": "PEPNETCOM Backend Engine — Modular Monolith",
+  "type": "module",
+  "scripts": {
+    "dev": "bun run --watch src/server.ts",
+    "start": "bun run src/server.ts",
+    "db:migrate": "prisma migrate dev",
+    "db:migrate:deploy": "prisma migrate deploy",
+    "db:generate": "prisma generate",
+    "db:seed": "tsx prisma/seed.ts",
+    "db:studio": "prisma studio",
+    "docker:up": "docker compose -f docker/docker-compose.yml up -d",
+    "docker:down": "docker compose -f docker/docker-compose.yml down",
+    "test": "vitest",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest --coverage",
+    "lint": "eslint src --ext .ts",
+    "lint:fix": "eslint src --ext .ts --fix",
+    "format": "prettier --write \"src/**/*.ts\" \"tests/**/*.ts\" \"prisma/**/*.ts\"",
+    "typecheck": "tsc --noEmit"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
+  },
+  "dependencies": {
+    "@hono/node-server": "^1.14.0",
+    "@prisma/client": "^6.6.0",
+    "@trpc/server": "^11.1.0",
+    "bcryptjs": "^3.0.0",
+    "bullmq": "^5.50.0",
+    "hono": "^4.7.0",
+    "ioredis": "^5.6.0",
+    "jose": "^6.0.0",
+    "zod": "^3.25.0"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/node": "^22.13.0",
+    "@vitest/coverage-v8": "^3.0.0",
+    "eslint": "^9.21.0",
+    "prettier": "^3.5.0",
+    "prisma": "^6.6.0",
+    "supertest": "^7.1.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.8.0",
+    "typescript-eslint": "^8.26.0",
+    "vitest": "^3.0.0"
+  },
+  "engines": {
+    "node": ">=22.0.0",
+    "bun": ">=1.2.0"
+  }
+}
