@@ -25,8 +25,8 @@ export class OrdersRepository {
     return prisma.order.count({ where })
   }
 
-  async findById(id: string, includeDetails?: true): Promise<OrderWithRelations | null>
-  async findById(id: string, includeDetails?: false): Promise<Order | null>
+  async findById(id: string): Promise<OrderWithRelations | null>
+  async findById(id: string, includeDetails: false): Promise<Order | null>
   async findById(id: string, includeDetails = true): Promise<Order | OrderWithRelations | null> {
     return prisma.order.findUnique({
       where: { id },
