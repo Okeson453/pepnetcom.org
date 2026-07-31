@@ -9,7 +9,8 @@ COPY package.json bun.lock* ./
 # `bun install --frozen-lockfile` before this ever builds a production
 # image — unpinned installs mean two builds of the same commit can resolve
 # different transitive dependency versions.
-RUN if [ -f bun.lock ]; then bun install --frozen-lockfile; else bun install; fi
+# Skip scripts here because the Prisma schema is not yet available in this stage.
+RUN if [ -f bun.lock ]; then bun install --frozen-lockfile --ignore-scripts; else bun install --ignore-scripts; fi
 
 # ---- build: generate the Prisma client against the full source tree ----
 FROM oven/bun:1 AS build
