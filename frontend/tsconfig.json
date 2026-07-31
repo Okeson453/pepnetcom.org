@@ -51,6 +51,12 @@
       ],
       "@pepnetcom/backend/*": [
         "../backend/src/*"
+      ],
+      "@prisma/client": [
+        "../backend/node_modules/@prisma/client"
+      ],
+      "@prisma/client/*": [
+        "../backend/node_modules/@prisma/client/*"
       ]
     },
     "target": "ES2017"
