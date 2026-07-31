@@ -3,9 +3,7 @@ node_modules/
 .pnp
 .pnp.js
 
-# Environment files — never commit real secrets.
-# .env.example and .env.test (checked-in fixtures with no live secrets) are
-# intentionally NOT ignored; every other .env* variant is.
+
 .env
 .env.local
 .env.*.local
