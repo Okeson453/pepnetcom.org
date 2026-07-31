@@ -7,7 +7,7 @@ export interface AuthTokens {
 }
 
 export interface AuthResult {
-  user: Omit<User, 'passwordHash'>
+  user: SafeUser
   tokens: AuthTokens
 }
 
