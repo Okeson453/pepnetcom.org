@@ -35,7 +35,7 @@ const nextConfig: NextConfig = {
   experimental: {
     optimizePackageImports: ["lucide-react", "recharts"],
   },
-  outputFileTracingRoot: path.join(__dirname),
+  outputFileTracingRoot: __dirname,
   async headers() {
     return [
       {
