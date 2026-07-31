@@ -56,7 +56,10 @@ const envSchema = z.object({
   ONESIGNAL_API_KEY: z.string().optional(),
   // Optional — if set, dead-lettered jobs post an alert here (Slack/Discord/any
   // incoming-webhook-compatible URL that accepts { text }). No-op if unset.
-  ALERT_WEBHOOK_URL: z.string().url().optional(),
+  ALERT_WEBHOOK_URL: z.preprocess((value) => {
+    if (value === '' || value == null) return undefined
+    return value
+  }, z.string().url().optional()),
 })
 
 export const env = envSchema.parse(process.env)

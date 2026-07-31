@@ -1,22 +1,11 @@
-import { Space_Grotesk, IBM_Plex_Sans, IBM_Plex_Mono } from "next/font/google";
-
-export const spaceGrotesk = Space_Grotesk({
-  subsets: ["latin"],
+export const spaceGrotesk = {
   variable: "--font-space-grotesk",
-  display: "swap",
-  weight: ["400", "500", "600", "700"],
-});
+};
 
-export const ibmPlexSans = IBM_Plex_Sans({
-  subsets: ["latin"],
+export const ibmPlexSans = {
   variable: "--font-ibm-plex-sans",
-  display: "swap",
-  weight: ["400", "500", "600"],
-});
+};
 
-export const ibmPlexMono = IBM_Plex_Mono({
-  subsets: ["latin"],
+export const ibmPlexMono = {
   variable: "--font-ibm-plex-mono",
-  display: "swap",
-  weight: ["400", "500"],
-});
+};
