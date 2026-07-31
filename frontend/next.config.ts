@@ -1,3 +1,4 @@
+import path from "path";
 import type { NextConfig } from "next";
 
 // CSP is intentionally strict by default. `'unsafe-inline'` on style-src is
@@ -34,6 +35,7 @@ const nextConfig: NextConfig = {
   experimental: {
     optimizePackageImports: ["lucide-react", "recharts"],
   },
+  outputFileTracingRoot: path.join(__dirname),
   async headers() {
     return [
       {
