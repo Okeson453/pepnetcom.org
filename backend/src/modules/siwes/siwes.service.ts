@@ -6,6 +6,7 @@ import { Ok, Err } from '../../shared/result'
 import { NotFoundError, ForbiddenError, ValidationError } from '../../shared/errors/domain-error'
 import type { Result } from '../../shared/result'
 import type { Order } from '@prisma/client'
+import type { SiwesOrderWithRelations } from './siwes.repository'
 
 function generateOrderNumber(): string {
   const prefix = 'SIW'
@@ -45,7 +46,7 @@ export class SiwesService {
     return Ok({ items, nextCursor, hasMore })
   }
 
-  async getById(id: string, userId: string, userRole: string): Promise<Result<Order, NotFoundError | ForbiddenError>> {
+  async getById(id: string, userId: string, userRole: string): Promise<Result<SiwesOrderWithRelations, NotFoundError | ForbiddenError>> {
     const order = await this.repo.findById(id)
     if (!order) {
       return Err(new NotFoundError('SIWES Order', id))

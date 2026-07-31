@@ -1,6 +1,15 @@
 import { prisma } from '../../shared/db/prisma-client'
 import type { Order, AcademicOrderDetail, Subject, Assignment, Prisma } from '@prisma/client'
 
+const academicOrderInclude = {
+  academicDetail: { include: { subject: true } },
+  client: { select: { id: true, email: true, firstName: true, lastName: true } },
+  assignment: { include: { staff: { select: { id: true, email: true, firstName: true, lastName: true } } } },
+  statusHistory: { orderBy: { createdAt: 'desc' } },
+} satisfies Prisma.OrderInclude
+
+export type AcademicOrderWithRelations = Prisma.OrderGetPayload<{ include: typeof academicOrderInclude }>
+
 export class AcademicRepository {
   async findOrders(params: {
     where?: Prisma.OrderWhereInput
@@ -18,15 +27,10 @@ export class AcademicRepository {
     })
   }
 
-  async findOrderById(id: string): Promise<Order | null> {
+  async findOrderById(id: string): Promise<AcademicOrderWithRelations | null> {
     return prisma.order.findUnique({
       where: { id, serviceType: 'ACADEMIC' },
-      include: {
-        academicDetail: { include: { subject: true } },
-        client: { select: { id: true, email: true, firstName: true, lastName: true } },
-        assignment: { include: { staff: { select: { id: true, email: true, firstName: true, lastName: true } } } },
-        statusHistory: { orderBy: { createdAt: 'desc' } },
-      },
+      include: academicOrderInclude,
     })
   }
 

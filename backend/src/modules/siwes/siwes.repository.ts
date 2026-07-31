@@ -1,5 +1,14 @@
 import { prisma } from '../../shared/db/prisma-client'
-import type { SiwesOrderDetail, Order, Prisma } from '@prisma/client'
+import type { SiwesOrderDetail, Prisma } from '@prisma/client'
+
+const siwesOrderInclude = {
+  siwesDetail: true,
+  client: { select: { id: true, email: true, firstName: true, lastName: true } },
+  assignment: { include: { staff: { select: { id: true, email: true, firstName: true, lastName: true } } } },
+  statusHistory: { orderBy: { createdAt: 'desc' } },
+} satisfies Prisma.OrderInclude
+
+export type SiwesOrderWithRelations = Prisma.OrderGetPayload<{ include: typeof siwesOrderInclude }>
 
 export class SiwesRepository {
   async findMany(params: {
@@ -7,27 +16,20 @@ export class SiwesRepository {
     take?: number
     cursor?: Prisma.OrderWhereUniqueInput
     orderBy?: Prisma.OrderOrderByWithRelationInput
-  }): Promise<Order[]> {
+  }): Promise<SiwesOrderWithRelations[]> {
     return prisma.order.findMany({
       ...params,
       include: {
-        siwesDetail: true,
-        client: { select: { id: true, email: true, firstName: true, lastName: true } },
-        assignment: { include: { staff: { select: { id: true, email: true, firstName: true, lastName: true } } } },
+        ...siwesOrderInclude,
         statusHistory: { orderBy: { createdAt: 'desc' }, take: 1 },
       },
     })
   }
 
-  async findById(id: string): Promise<Order | null> {
+  async findById(id: string): Promise<SiwesOrderWithRelations | null> {
     return prisma.order.findUnique({
       where: { id, serviceType: 'SIWES' },
-      include: {
-        siwesDetail: true,
-        client: { select: { id: true, email: true, firstName: true, lastName: true } },
-        assignment: { include: { staff: { select: { id: true, email: true, firstName: true, lastName: true } } } },
-        statusHistory: { orderBy: { createdAt: 'desc' } },
-      },
+      include: siwesOrderInclude,
     })
   }
 

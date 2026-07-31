@@ -7,6 +7,7 @@ import { NotFoundError, ForbiddenError, ValidationError } from '../../shared/err
 import type { Result } from '../../shared/result'
 import type { OrderListInput, OrderCreateInput, OrderUpdateStatusInput, OrderAssignInput, OrderCancelInput } from './orders.schema'
 import type { Order, OrderStatusHistory } from '@prisma/client'
+import type { OrderWithRelations } from './orders.repository'
 
 function generateOrderNumber(): string {
   const prefix = 'ORD'
@@ -50,7 +51,7 @@ export class OrdersService {
     return Ok({ items, nextCursor, hasMore })
   }
 
-  async getById(id: string, userId: string, userRole: string): Promise<Result<Order, NotFoundError | ForbiddenError>> {
+  async getById(id: string, userId: string, userRole: string): Promise<Result<OrderWithRelations, NotFoundError | ForbiddenError>> {
     const order = await this.repo.findById(id)
     if (!order) {
       return Err(new NotFoundError('Order', id))
@@ -108,7 +109,7 @@ export class OrdersService {
   }
 
   async trackingTimeline(orderId: string, userId: string, userRole: string): Promise<Result<OrderStatusHistory[], NotFoundError | ForbiddenError>> {
-    const order = await this.repo.findById(orderId, false)
+    const order = await this.repo.findById(orderId)
     if (!order) {
       return Err(new NotFoundError('Order', orderId))
     }

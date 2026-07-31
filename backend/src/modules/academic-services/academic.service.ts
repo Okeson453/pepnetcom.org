@@ -6,6 +6,7 @@ import { Ok, Err } from '../../shared/result'
 import { NotFoundError, ForbiddenError } from '../../shared/errors/domain-error'
 import type { Result } from '../../shared/result'
 import type { Order, Subject, Assignment } from '@prisma/client'
+import type { AcademicOrderWithRelations } from './academic.repository'
 
 function generateOrderNumber(): string {
   const prefix = 'ACA'
@@ -46,7 +47,7 @@ export class AcademicService {
     return Ok({ items, nextCursor, hasMore })
   }
 
-  async getOrderById(id: string, userId: string, userRole: string): Promise<Result<Order, NotFoundError | ForbiddenError>> {
+  async getOrderById(id: string, userId: string, userRole: string): Promise<Result<AcademicOrderWithRelations, NotFoundError | ForbiddenError>> {
     const order = await this.repo.findOrderById(id)
     if (!order) {
       return Err(new NotFoundError('Academic Order', id))

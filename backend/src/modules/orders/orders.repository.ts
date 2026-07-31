@@ -2,6 +2,14 @@ import { prisma } from '../../shared/db/prisma-client'
 import type { TransactionClient } from '../../shared/db/transaction'
 import type { Order, OrderStatusHistory, OrderAssignment, Prisma } from '@prisma/client'
 
+const orderDetailInclude = {
+  statusHistory: { orderBy: { createdAt: 'desc' } },
+  assignment: true,
+  client: { select: { id: true, email: true, firstName: true, lastName: true } },
+} satisfies Prisma.OrderInclude
+
+export type OrderWithRelations = Prisma.OrderGetPayload<{ include: typeof orderDetailInclude }>
+
 export class OrdersRepository {
   async findMany(params: {
     where?: Prisma.OrderWhereInput
@@ -17,14 +25,12 @@ export class OrdersRepository {
     return prisma.order.count({ where })
   }
 
-  async findById(id: string, includeDetails = true): Promise<Order | null> {
+  async findById(id: string, includeDetails: true): Promise<OrderWithRelations | null>
+  async findById(id: string, includeDetails: false): Promise<Order | null>
+  async findById(id: string, includeDetails = true): Promise<Order | OrderWithRelations | null> {
     return prisma.order.findUnique({
       where: { id },
-      include: includeDetails ? {
-        statusHistory: { orderBy: { createdAt: 'desc' } },
-        assignment: true,
-        client: { select: { id: true, email: true, firstName: true, lastName: true } },
-      } : undefined,
+      include: includeDetails ? orderDetailInclude : undefined,
     })
   }
 
